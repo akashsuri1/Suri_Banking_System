@@ -83,12 +83,31 @@ void addbalance(char *userName, int amount)
     }
     fflush(fptr1);
     fflush(fptr2);
-    fclose(fptr1);
-    fclose(fptr2);
-    if(remove("user.txt")!=0){
-        perror("Error deleting file\n");
+    int fd1 = fileno(fptr1);
+    int fd2 = fileno(fptr2);
+    if (fsync(fd1) != 0 || fsync(fd2) != 0)
+    {
+        perror("Error syncing file");
     }
-    rename("temp.txt","user.txt");
+    if(fclose(fptr1)==0 && fclose(fptr2)==0){
+        int max_retries = 5;
+        int retry_count = 0;
+        while (retry_count < max_retries) {
+            if (remove("user.txt") == 0) {
+                break;
+            }
+            perror("file not removing, retrying...");
+            sleep(5);
+            retry_count++;
+        }
+        if (retry_count == max_retries) {
+            perror("Failed to rename file after multiple attempts");
+        }
+        rename("temp.txt","user.txt");
+    }else{
+        printf("file not closed\n");
+    }
+
 }
 void withdraw(char *userName, int amount)
 {
@@ -121,12 +140,30 @@ void withdraw(char *userName, int amount)
     }
     fflush(fptr1);
     fflush(fptr2);
-    fclose(fptr1);
-    fclose(fptr2);
-    if(remove("user.txt")!=0){
-        perror("Error deleting file\n");
+    int fd1 = fileno(fptr1);
+    int fd2 = fileno(fptr2);
+    if (fsync(fd1) != 0 || fsync(fd2) != 0)
+    {
+        perror("Error syncing file");
     }
-    rename("temp.txt","user.txt");
+  if(fclose(fptr1)==0 && fclose(fptr2)==0){
+        int max_retries = 5;
+        int retry_count = 0;
+        while (retry_count < max_retries) {
+            if (remove("user.txt") == 0) {
+                break;
+            }
+            perror("file not removing, retrying...");
+            sleep(5);
+            retry_count++;
+        }
+        if (retry_count == max_retries) {
+            perror("Failed to rename file after multiple attempts");
+        }
+        rename("temp.txt","user.txt");
+    }else{
+        printf("file not closed\n");
+    }
 }
 void transfer(char *userName)
 {
@@ -190,12 +227,30 @@ void transfer(char *userName)
     }
     fflush(fptr);
     fflush(fptr2);
-    fclose(fptr);
-    fclose(fptr2);
-    if(remove("user.txt")!=0){
-        perror("Error deleting file\n");
+    int fd1 = fileno(fptr);
+    int fd2 = fileno(fptr2);
+    if (fsync(fd1) != 0 || fsync(fd2) != 0)
+    {
+        perror("Error syncing file");
     }
-    rename("temp.txt","user.txt");
+   if(fclose(fptr)==0 && fclose(fptr2)==0){
+        int max_retries = 5;
+        int retry_count = 0;
+        while (retry_count < max_retries) {
+            if (remove("user.txt") == 0) {
+                break;
+            }
+            perror("file not removing, retrying...");
+            sleep(5);
+            retry_count++;
+        }
+        if (retry_count == max_retries) {
+            perror("Failed to rename file after multiple attempts");
+        }
+        rename("temp.txt","user.txt");
+    }else{
+        printf("file not closed\n");
+    }
 }
 int main()
 {

@@ -13,7 +13,7 @@ kushal kushal 2525
 mukesh mukesh 3636
 ranjit ranjit 4747
 vikram vikram 5858
-alok alok 6969
+alok alok 7469
 bhavesh bhavesh 8080
 chandan chandan 9191
 dev dev 1212
@@ -38,7 +38,7 @@ veer veer 3232
 yash yash 5454
 zaid zaid 7676
 arif arif 9898
-bilal bilal 1212
+bilal bilal 1712
 chand chand 3434
 deepak deepak 5656
 eric eric 7878
@@ -57,5 +57,7 @@ rahul rahul 5454
 saurabh saurabh 7676
 tanmay tanmay 9898
 uday uday 1212
-vicky vicky 3939
-harshit harshit 5505
+vicky vicky 944
+harshit harshit 489493
+animesh rajasthan 50500
+navjot punjabi123 5430
