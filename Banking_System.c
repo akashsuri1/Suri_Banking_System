@@ -12,7 +12,9 @@
 typedef struct account
 {
     char userName[60];
+    char password[60];
     int balance;
+    struct account* next;
 } account;
 bool checkuser(char *userName, char *getpasw)
 {
@@ -63,107 +65,112 @@ int getBalance(char *userName)
 void addbalance(char *userName, int amount)
 {
     FILE *fptr1 = fopen("user.txt", "r");
-    FILE *fptr2 = fopen("temp.txt", "w");
+    account* head=NULL;
+    account* head2=head;
     char usertemp[60];
     char password[60];
     int balance = 0;
-    if (fptr1 != NULL && fptr2 != NULL)
-    {
-        while (fscanf(fptr1, "%s %s %d", usertemp, password, &balance) != EOF)
-        {
-            if (strcmp(userName, usertemp) == 0)
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, password, balance + amount);
+    if(fptr1!=NULL){
+        while(fscanf(fptr1,"%s %s %d",usertemp,password,&balance)!=EOF){
+            if(head==NULL){
+                head=(account*)malloc(sizeof(account));
+                strcpy(head->userName,usertemp);
+                strcpy(head->password,password);
+                if(strcmp(userName,usertemp)==0){
+                    head->balance=balance+amount;
+                }else{
+                    head->balance=balance;
+                }
+                head->next=NULL;
+                head2=head;
             }
-            else
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, password, balance);
+            else{
+                account* temp=(account*)malloc(sizeof(account));
+                strcpy(temp->userName,usertemp);
+                strcpy(temp->password,password);
+                if(strcmp(userName,usertemp)==0){
+                    temp->balance=balance+amount;
+                }else{
+                    temp->balance=balance;
+                }
+                temp->next=NULL;
+                head2->next=temp;
+                head2=head2->next;
             }
         }
     }
-    fflush(fptr1);
-    fflush(fptr2);
-    int fd1 = fileno(fptr1);
-    int fd2 = fileno(fptr2);
-    if (fsync(fd1) != 0 || fsync(fd2) != 0)
-    {
-        perror("Error syncing file");
-    }
-    if(fclose(fptr1)==0 && fclose(fptr2)==0){
-        int max_retries = 5;
-        int retry_count = 0;
-        while (retry_count < max_retries) {
-            if (remove("user.txt") == 0) {
-                break;
-            }
-            perror("file not removing, retrying...");
-            sleep(5);
-            retry_count++;
+    fclose(fptr1);
+    fptr1 = fopen("user.txt", "w");
+    if (fptr1!=NULL){
+        while(head!=NULL){
+            account* temp=head;
+            fprintf(fptr1,"%s %s %d\n",head->userName,head->password,head->balance);
+            head=head->next;
+            free(temp);
         }
-        if (retry_count == max_retries) {
-            perror("Failed to rename file after multiple attempts");
-        }
-        rename("temp.txt","user.txt");
-    }else{
-        printf("file not closed\n");
     }
-
+    fclose(fptr1);
 }
 void withdraw(char *userName, int amount)
 {
     FILE *fptr1 = fopen("user.txt", "r");
-    FILE *fptr2 = fopen("temp.txt", "w");
     char usertemp[60];
     char password[60];
     int balance = 0;
-    if (fptr1 != NULL && fptr2 != NULL)
+    account* head=NULL;
+    account* head2=head;
+    if (fptr1 != NULL)
     {
         while (fscanf(fptr1, "%s %s %d", usertemp, password, &balance) != EOF)
-        {
-            if (strcmp(userName, usertemp) == 0)
-            {
-                if (amount > balance)
-                {
-                    printf("Insufficent Balance\n");
-                    fprintf(fptr2, "%s %s %d\n", usertemp, password, balance);
+        { 
+             if(head==NULL){
+                head=(account*)malloc(sizeof(account));
+                strcpy(head->userName,usertemp);
+                strcpy(head->password,password);
+                if(strcmp(userName,usertemp)==0){
+                    if(amount>balance){
+                        printf("Insufficent Balance\n");
+                        head->balance=balance;
+                    }else{
+                        head->balance=balance-amount;
+                    }
+                }else{
+                    head->balance=balance;
                 }
-                else
-                {
-                    fprintf(fptr2, "%s %s %d\n", usertemp, password, balance - amount);
+                head->next=NULL;
+                head2=head;
+            }
+            else{
+                account* temp=(account*)malloc(sizeof(account));
+                strcpy(temp->userName,usertemp);
+                strcpy(temp->password,password);
+                if(strcmp(userName,usertemp)==0){
+                     if(amount>balance){
+                        printf("Insufficent Balance\n");
+                        temp->balance=balance;
+                    }else{
+                        temp->balance=balance-amount;
+                    }
+                }else{
+                    temp->balance=balance;
                 }
-            }
-            else
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, password, balance);
+                temp->next=NULL;
+                head2->next=temp;
+                head2=head2->next;
             }
         }
     }
-    fflush(fptr1);
-    fflush(fptr2);
-    int fd1 = fileno(fptr1);
-    int fd2 = fileno(fptr2);
-    if (fsync(fd1) != 0 || fsync(fd2) != 0)
-    {
-        perror("Error syncing file");
-    }
-  if(fclose(fptr1)==0 && fclose(fptr2)==0){
-        int max_retries = 5;
-        int retry_count = 0;
-        while (retry_count < max_retries) {
-            if (remove("user.txt") == 0) {
-                break;
-            }
-            perror("file not removing, retrying...");
-            sleep(5);
-            retry_count++;
+    fclose(fptr1);
+    fptr1 = fopen("user.txt", "w");
+    if (fptr1!=NULL){
+        while(head!=NULL){
+            account* temp=head;
+            fprintf(fptr1,"%s %s %d\n",head->userName,head->password,head->balance);
+            head=head->next;
+            free(temp);
         }
-        if (retry_count == max_retries) {
-            perror("Failed to rename file after multiple attempts");
-        }
-        rename("temp.txt","user.txt");
-    }else{
-        printf("file not closed\n");
     }
+    fclose(fptr1);
 }
 void transfer(char *userName)
 {
@@ -172,85 +179,87 @@ void transfer(char *userName)
     char pass[60];
     printf("Enter the userName to transfer to: ");
     scanf("%s", user2);
+    printf("%s\n",user2);
     int balance = 0;
     int balance2 = 0;
+    account* head=NULL;
+    account* head2=head;
     FILE *fptr = fopen("user.txt", "r");
     bool flag = false;
     if (fptr != NULL)
     {
+
         while (fscanf(fptr, "%s %s %d", usertemp, pass, &balance) != EOF)
         {
-            if (strcmp(userName, usertemp) == 0)
-            {
-                balance2 = balance;
+            if(head==NULL){
+
+                head=(account*)malloc(sizeof(account));
+                strcpy(head->userName,usertemp);
+                strcpy(head->password,pass);
+                if(strcmp(userName,usertemp)==0){
+                    balance2=balance;
+                }
+                if(strcmp(usertemp,user2)==0){
+                    printf("yes\n");
+                    flag=true;
+                }
+                head->balance=balance;
+                head->next=NULL;
+                head2=head;
             }
-            if (strcmp(user2, usertemp) == 0)
-            {
-                flag = true;
+            else{
+                account* temp=(account*)malloc(sizeof(account));
+                strcpy(temp->userName,usertemp);
+                strcpy(temp->password,pass);
+                if(strcmp(userName,usertemp)==0){
+                    balance2=balance;
+                }
+                if(strcmp(usertemp,user2)==0){
+                    printf("yes\n");
+                    flag=true;
+                }
+                temp->balance=balance;
+                temp->next=NULL;
+                head2->next=temp;
+                head2=head2->next;
             }
         }
     }
     fclose(fptr);
+    int amount=0;
+    bool flag2=true;
     if (!flag)
     {
         printf("%s Doesn't Exist's\n", user2);
-        return;
-    }
-    int amount;
-    printf("Enter The Amount to Transfer: ");
-    scanf("%d", &amount);
-    getchar();
-    if (amount > balance2)
-    {
-        printf("Insufficent Fund To Transfer\n");
-        return;
-    }
-    fptr = fopen("user.txt", "r");
-    FILE *fptr2 = fopen("temp.txt", "w");
-    if (fptr != NULL && fptr2 != NULL)
-    {
-        while (fscanf(fptr, "%s %s %d", usertemp, pass, &balance) != EOF)
-        {
-            if (strcmp(userName, usertemp) == 0)
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, pass, balance - amount);
-            }
-            else if (strcmp(user2, usertemp) == 0)
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, pass, balance + amount);
-            }
-            else
-            {
-                fprintf(fptr2, "%s %s %d\n", usertemp, pass, balance);
-            }
-        }
-    }
-    fflush(fptr);
-    fflush(fptr2);
-    int fd1 = fileno(fptr);
-    int fd2 = fileno(fptr2);
-    if (fsync(fd1) != 0 || fsync(fd2) != 0)
-    {
-        perror("Error syncing file");
-    }
-   if(fclose(fptr)==0 && fclose(fptr2)==0){
-        int max_retries = 5;
-        int retry_count = 0;
-        while (retry_count < max_retries) {
-            if (remove("user.txt") == 0) {
-                break;
-            }
-            perror("file not removing, retrying...");
-            sleep(5);
-            retry_count++;
-        }
-        if (retry_count == max_retries) {
-            perror("Failed to rename file after multiple attempts");
-        }
-        rename("temp.txt","user.txt");
     }else{
-        printf("file not closed\n");
+        printf("Enter The Amount to Transfer: ");
+        scanf("%d", &amount);
+        printf("%d\n",amount);
+        getchar();
+        if (amount > balance2)
+        {   
+            printf("Insufficent Fund To Transfer\n");
+            flag2=false;
+        }
     }
+    fptr = fopen("user.txt", "w");
+    if (fptr != NULL)
+    {
+       while(head!=NULL){
+            account* temp=head;
+            if(flag2&& strcmp(head->userName,userName)==0){
+                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance-amount);
+            }
+            else if(flag2&&strcmp(head->userName,user2)==0){
+                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance+amount);
+            }else{
+                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance);
+            }
+            head=head->next;
+            free(temp);
+        }
+    }
+    fclose(fptr);
 }
 int main()
 {
