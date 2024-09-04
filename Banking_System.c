@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -38,6 +39,7 @@ bool checkuser(char *userName, char *getpasw)
 void adduser(char *userName, char *password)
 {
     FILE *fptr = fopen("user.txt", "a");
+    encrypt(password, 2);
     if (fptr != NULL)
     {
         time_t t;
@@ -48,7 +50,8 @@ void adduser(char *userName, char *password)
         strcat(filename, userName);
         strcat(filename, ".txt");
         FILE *fptr2 = fopen(filename, "a");
-        if(fptr2==NULL){
+        if (fptr2 == NULL)
+        {
             perror("tell the error");
         }
         fprintf(fptr2, "Created on %s\n", __DATE__);
@@ -263,7 +266,6 @@ void transfer(char *userName)
     char pass[60];
     printf("Enter the userName to transfer to: ");
     scanf("%s", user2);
-    printf("%s\n", user2);
     int balance = 0;
     int balance2 = 0;
     account *head = NULL;
@@ -287,7 +289,6 @@ void transfer(char *userName)
                 }
                 if (strcmp(usertemp, user2) == 0)
                 {
-                    printf("yes\n");
                     flag = true;
                 }
                 head->balance = balance;
@@ -435,13 +436,14 @@ int main()
                 printf("Password: ");
                 scanf("%s", password);
                 sleep(1);
+                decrypt(getpasw, 2);
                 if (strcmp(password, getpasw) == 0)
                 {
                     sleep(2);
                     int choice2 = 1;
+                    printf("Login SuccessFull For %s\n", userName);
                     do
                     {
-                        printf("Login SuccessFull For %s\n", userName);
                         printf("Tell which operation you want to perform :\n");
                         printf("1 to add Balance\n");
                         printf("2 to Withdraw\n");
