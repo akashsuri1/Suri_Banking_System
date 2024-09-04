@@ -59,7 +59,9 @@ tanmay tanmay 6698
 uday uday 1988
 vicky vicky 51744
 harshit harshit 487293
-animesh rajasthan 2380
+animesh rajasthan 2390
 navjot punjabi123 10980
-jitendra uca 0
-raunak 12456 2120
+jitendra uca 1985
+raunak 12456 2625
+kab kyu 4
+sad sad 0

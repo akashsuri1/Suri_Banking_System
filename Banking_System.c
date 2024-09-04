@@ -14,7 +14,7 @@ typedef struct account
     char userName[60];
     char password[60];
     int balance;
-    struct account* next;
+    struct account *next;
 } account;
 bool checkuser(char *userName, char *getpasw)
 {
@@ -40,6 +40,19 @@ void adduser(char *userName, char *password)
     FILE *fptr = fopen("user.txt", "a");
     if (fptr != NULL)
     {
+        time_t t;
+        struct tm *tm_info;
+        time(&t);
+        tm_info = localtime(&t);
+        char filename[110] = "logs/";
+        strcat(filename, userName);
+        strcat(filename, ".txt");
+        FILE *fptr2 = fopen(filename, "a");
+        if(fptr2==NULL){
+            perror("tell the error");
+        }
+        fprintf(fptr2, "Created on %s\n", __DATE__);
+        fclose(fptr2);
         fprintf(fptr, "%s %s %d\n", userName, password, 0);
     }
     fclose(fptr);
@@ -64,109 +77,180 @@ int getBalance(char *userName)
 }
 void addbalance(char *userName, int amount)
 {
+    if (amount <= 0)
+    {
+        printf("Incorrect Value\n");
+        return;
+    }
     FILE *fptr1 = fopen("user.txt", "r");
-    account* head=NULL;
-    account* head2=head;
+    account *head = NULL;
+    account *head2 = head;
+    int balance2 = 0;
     char usertemp[60];
     char password[60];
     int balance = 0;
-    if(fptr1!=NULL){
-        while(fscanf(fptr1,"%s %s %d",usertemp,password,&balance)!=EOF){
-            if(head==NULL){
-                head=(account*)malloc(sizeof(account));
-                strcpy(head->userName,usertemp);
-                strcpy(head->password,password);
-                if(strcmp(userName,usertemp)==0){
-                    head->balance=balance+amount;
-                }else{
-                    head->balance=balance;
+    if (fptr1 != NULL)
+    {
+        while (fscanf(fptr1, "%s %s %d", usertemp, password, &balance) != EOF)
+        {
+            if (head == NULL)
+            {
+                head = (account *)malloc(sizeof(account));
+                strcpy(head->userName, usertemp);
+                strcpy(head->password, password);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    balance2 = balance;
+                    head->balance = balance + amount;
                 }
-                head->next=NULL;
-                head2=head;
+                else
+                {
+                    head->balance = balance;
+                }
+                head->next = NULL;
+                head2 = head;
             }
-            else{
-                account* temp=(account*)malloc(sizeof(account));
-                strcpy(temp->userName,usertemp);
-                strcpy(temp->password,password);
-                if(strcmp(userName,usertemp)==0){
-                    temp->balance=balance+amount;
-                }else{
-                    temp->balance=balance;
+            else
+            {
+                account *temp = (account *)malloc(sizeof(account));
+                strcpy(temp->userName, usertemp);
+                strcpy(temp->password, password);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    balance2 = balance;
+                    temp->balance = balance + amount;
                 }
-                temp->next=NULL;
-                head2->next=temp;
-                head2=head2->next;
+                else
+                {
+                    temp->balance = balance;
+                }
+                temp->next = NULL;
+                head2->next = temp;
+                head2 = head2->next;
             }
         }
     }
     fclose(fptr1);
     fptr1 = fopen("user.txt", "w");
-    if (fptr1!=NULL){
-        while(head!=NULL){
-            account* temp=head;
-            fprintf(fptr1,"%s %s %d\n",head->userName,head->password,head->balance);
-            head=head->next;
+    if (fptr1 != NULL)
+    {
+        while (head != NULL)
+        {
+            account *temp = head;
+            fprintf(fptr1, "%s %s %d\n", head->userName, head->password, head->balance);
+            head = head->next;
             free(temp);
         }
     }
     fclose(fptr1);
+    time_t t;
+    struct tm *tm_info;
+    time(&t);
+    tm_info = localtime(&t);
+    char filename[110] = "logs/";
+    strcat(filename, userName);
+    strcat(filename, ".txt");
+    FILE *fptr = fopen(filename, "a");
+    fprintf(fptr, "Added %d  %02d-%02d-%04d %d %d\n", amount, tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900, balance2, balance2 + amount);
+    fclose(fptr);
 }
 void withdraw(char *userName, int amount)
 {
+    if (amount <= 0)
+    {
+        printf("Incorrect Value\n");
+        return;
+    }
     FILE *fptr1 = fopen("user.txt", "r");
     char usertemp[60];
     char password[60];
     int balance = 0;
-    account* head=NULL;
-    account* head2=head;
+    account *head = NULL;
+    account *head2 = head;
     if (fptr1 != NULL)
     {
         while (fscanf(fptr1, "%s %s %d", usertemp, password, &balance) != EOF)
-        { 
-             if(head==NULL){
-                head=(account*)malloc(sizeof(account));
-                strcpy(head->userName,usertemp);
-                strcpy(head->password,password);
-                if(strcmp(userName,usertemp)==0){
-                    if(amount>balance){
+        {
+            if (head == NULL)
+            {
+                head = (account *)malloc(sizeof(account));
+                strcpy(head->userName, usertemp);
+                strcpy(head->password, password);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    if (amount > balance)
+                    {
                         printf("Insufficent Balance\n");
-                        head->balance=balance;
-                    }else{
-                        head->balance=balance-amount;
+                        head->balance = balance;
                     }
-                }else{
-                    head->balance=balance;
+                    else
+                    {
+                        head->balance = balance - amount;
+                        time_t t;
+                        struct tm *tm_info;
+                        time(&t);
+                        tm_info = localtime(&t);
+                        char filename[110] = "logs/";
+                        strcat(filename, userName);
+                        strcat(filename, ".txt");
+                        FILE *fptr = fopen(filename, "a");
+                        fprintf(fptr, "Withdraw %d  %02d-%02d-%04d %d %d\n", amount, tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900, balance, balance - amount);
+                        fclose(fptr);
+                    }
                 }
-                head->next=NULL;
-                head2=head;
+                else
+                {
+                    head->balance = balance;
+                }
+                head->next = NULL;
+                head2 = head;
             }
-            else{
-                account* temp=(account*)malloc(sizeof(account));
-                strcpy(temp->userName,usertemp);
-                strcpy(temp->password,password);
-                if(strcmp(userName,usertemp)==0){
-                     if(amount>balance){
+            else
+            {
+                account *temp = (account *)malloc(sizeof(account));
+                strcpy(temp->userName, usertemp);
+                strcpy(temp->password, password);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    if (amount > balance)
+                    {
                         printf("Insufficent Balance\n");
-                        temp->balance=balance;
-                    }else{
-                        temp->balance=balance-amount;
+                        temp->balance = balance;
                     }
-                }else{
-                    temp->balance=balance;
+                    else
+                    {
+                        temp->balance = balance - amount;
+                        time_t t;
+                        struct tm *tm_info;
+                        time(&t);
+                        tm_info = localtime(&t);
+                        char filename[110] = "logs/";
+                        strcat(filename, userName);
+                        strcat(filename, ".txt");
+                        FILE *fptr = fopen(filename, "a");
+                        fprintf(fptr, "Withdraw %d  %02d-%02d-%04d %d %d\n", amount, tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900, balance, balance - amount);
+                        fclose(fptr);
+                    }
                 }
-                temp->next=NULL;
-                head2->next=temp;
-                head2=head2->next;
+                else
+                {
+                    temp->balance = balance;
+                }
+                temp->next = NULL;
+                head2->next = temp;
+                head2 = head2->next;
             }
         }
     }
     fclose(fptr1);
     fptr1 = fopen("user.txt", "w");
-    if (fptr1!=NULL){
-        while(head!=NULL){
-            account* temp=head;
-            fprintf(fptr1,"%s %s %d\n",head->userName,head->password,head->balance);
-            head=head->next;
+    if (fptr1 != NULL)
+    {
+        while (head != NULL)
+        {
+            account *temp = head;
+            fprintf(fptr1, "%s %s %d\n", head->userName, head->password, head->balance);
+            head = head->next;
             free(temp);
         }
     }
@@ -179,11 +263,11 @@ void transfer(char *userName)
     char pass[60];
     printf("Enter the userName to transfer to: ");
     scanf("%s", user2);
-    printf("%s\n",user2);
+    printf("%s\n", user2);
     int balance = 0;
     int balance2 = 0;
-    account* head=NULL;
-    account* head2=head;
+    account *head = NULL;
+    account *head2 = head;
     FILE *fptr = fopen("user.txt", "r");
     bool flag = false;
     if (fptr != NULL)
@@ -191,75 +275,135 @@ void transfer(char *userName)
 
         while (fscanf(fptr, "%s %s %d", usertemp, pass, &balance) != EOF)
         {
-            if(head==NULL){
+            if (head == NULL)
+            {
 
-                head=(account*)malloc(sizeof(account));
-                strcpy(head->userName,usertemp);
-                strcpy(head->password,pass);
-                if(strcmp(userName,usertemp)==0){
-                    balance2=balance;
+                head = (account *)malloc(sizeof(account));
+                strcpy(head->userName, usertemp);
+                strcpy(head->password, pass);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    balance2 = balance;
                 }
-                if(strcmp(usertemp,user2)==0){
+                if (strcmp(usertemp, user2) == 0)
+                {
                     printf("yes\n");
-                    flag=true;
+                    flag = true;
                 }
-                head->balance=balance;
-                head->next=NULL;
-                head2=head;
+                head->balance = balance;
+                head->next = NULL;
+                head2 = head;
             }
-            else{
-                account* temp=(account*)malloc(sizeof(account));
-                strcpy(temp->userName,usertemp);
-                strcpy(temp->password,pass);
-                if(strcmp(userName,usertemp)==0){
-                    balance2=balance;
+            else
+            {
+                account *temp = (account *)malloc(sizeof(account));
+                strcpy(temp->userName, usertemp);
+                strcpy(temp->password, pass);
+                if (strcmp(userName, usertemp) == 0)
+                {
+                    balance2 = balance;
                 }
-                if(strcmp(usertemp,user2)==0){
-                    printf("yes\n");
-                    flag=true;
+                if (strcmp(usertemp, user2) == 0)
+                {
+                    flag = true;
                 }
-                temp->balance=balance;
-                temp->next=NULL;
-                head2->next=temp;
-                head2=head2->next;
+                temp->balance = balance;
+                temp->next = NULL;
+                head2->next = temp;
+                head2 = head2->next;
             }
         }
     }
     fclose(fptr);
-    int amount=0;
-    bool flag2=true;
+    int amount = 0;
+    bool flag2 = true;
     if (!flag)
     {
         printf("%s Doesn't Exist's\n", user2);
-    }else{
+    }
+    else
+    {
         printf("Enter The Amount to Transfer: ");
         scanf("%d", &amount);
-        printf("%d\n",amount);
         getchar();
+        if (amount <= 0)
+        {
+            printf("Incorrect Value\n");
+            flag2 = false;
+        }
         if (amount > balance2)
-        {   
+        {
             printf("Insufficent Fund To Transfer\n");
-            flag2=false;
+            flag2 = false;
         }
     }
     fptr = fopen("user.txt", "w");
+    int balance3 = 0;
     if (fptr != NULL)
     {
-       while(head!=NULL){
-            account* temp=head;
-            if(flag2&& strcmp(head->userName,userName)==0){
-                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance-amount);
+        while (head != NULL)
+        {
+            account *temp = head;
+            if (flag2 && (strcmp(head->userName, userName) == 0))
+            {
+                fprintf(fptr, "%s %s %d\n", head->userName, head->password, head->balance - amount);
             }
-            else if(flag2&&strcmp(head->userName,user2)==0){
-                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance+amount);
-            }else{
-                fprintf(fptr,"%s %s %d\n",head->userName,head->password,head->balance);
+            else if (flag2 && strcmp(head->userName, user2) == 0)
+            {
+                balance3 = head->balance;
+                fprintf(fptr, "%s %s %d\n", head->userName, head->password, head->balance + amount);
             }
-            head=head->next;
+            else
+            {
+                fprintf(fptr, "%s %s %d\n", head->userName, head->password, head->balance);
+            }
+            head = head->next;
             free(temp);
         }
     }
     fclose(fptr);
+    if (flag && flag2)
+    {
+        time_t t;
+        struct tm *tm_info;
+        time(&t);
+        tm_info = localtime(&t);
+        char filename[110] = "logs/";
+        strcat(filename, userName);
+        strcat(filename, ".txt");
+        fptr = fopen(filename, "a");
+        fprintf(fptr, "TransFer %d  %02d-%02d-%04d %d %d\n", amount, tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900, balance2, balance2 - amount);
+        fclose(fptr);
+        strcpy(filename, "logs/");
+        strcat(filename, user2);
+        strcat(filename, ".txt");
+        fptr = fopen(filename, "a");
+        fprintf(fptr, "Receieved %d  %02d-%02d-%04d %d %d\n", amount, tm_info->tm_mday, tm_info->tm_mon + 1, tm_info->tm_year + 1900, balance3, balance3 + amount);
+        fclose(fptr);
+    }
+}
+void printlogs(char *userName)
+{
+    printf("Logs of %s are : \n", userName);
+    printf("----------------------------------------\n");
+    char filename[110] = "logs/";
+    strcat(filename, userName);
+    strcat(filename, ".txt");
+    FILE *fptr = fopen(filename, "r");
+    char buffer[300];
+    if (fptr != NULL)
+    {
+        while (fgets(buffer, 300, fptr) != NULL)
+        {
+            printf("%s\n", buffer);
+        }
+        printf("----------------------------------------\n");
+        fclose(fptr);
+    }
+    else
+    {
+        printf("No Logs\n");
+    }
 }
 int main()
 {
@@ -337,7 +481,8 @@ int main()
                         }
                         else if (choice2 == 5)
                         {
-                            sleep(1);
+                            sleep(2);
+                            printlogs(userName);
                         }
                         else if (choice2 != 6)
                         {
